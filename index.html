@@ -320,15 +320,16 @@ document.getElementById("photoMode").onclick=e=>{photoMode=!photoMode;selected=n
 // ---- カード ----
 const glyph=n=>n.startsWith("主人公")?"旅":[...n][0];
 function card(id){
-  const [el,r]=ROSTER[id], b=document.createElement("button"), img=imgOf(id), st=STATS[id];
-  b.className="card"+(r===5?" star5":""); b.draggable=!TOUCH; b.dataset.id=id; b.type="button";
+  const [el,r]=ROSTER[id], b=document.createElement("div"), img=imgOf(id), st=STATS[id];
+  b.className="card"+(r===5?" star5":""); b.dataset.id=id; b.setAttribute("role","button"); b.tabIndex=0;
+  b.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();b.click()}});
   b.addEventListener("touchstart",e=>touchStart(e,id,b),{passive:true});
+  b.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"&&e.button===0&&!photoMode&&!tdrag)tdrag={id,b,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,mouse:true,active:false}});
   b.style.setProperty("--el",`var(--${el})`);b.style.setProperty("--sd",`${(NAMES.indexOf(id)*0.37)%7}s`);
   b.title=`${id}（${EL[el]}・★${r}）\n`+SITES.map(s=>`${s.name} ${SCORE[id][s.id]?.label||"—"}`).join(" / ")+`\n平均 ${Math.round(st.avg)}点`;
   b.innerHTML=`<span class="por" aria-hidden="true">${img?`<img src="${img}" alt="">`:glyph(id)}<span class="elb">${EL[el]}</span>${st.spread>=45?'<span class="split"></span>':""}</span><span class="nm">${id}</span>`;
-  b.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain",id);b.classList.add("dragging")});
-  b.addEventListener("dragend",()=>b.classList.remove("dragging"));
-  b.addEventListener("click",e=>{e.stopPropagation();if(photoMode){photoTarget=id;oneFile.value="";oneFile.click();return}selected=selected===id?null:id;render()});
+  b.addEventListener("dragstart",e=>e.preventDefault());
+  b.addEventListener("click",e=>{e.stopPropagation();if(suppressClick){suppressClick=false;return}if(photoMode){photoTarget=id;oneFile.value="";oneFile.click();return}selected=selected===id?null:id;render()});
   const isFile=e=>[...(e.dataTransfer?.types||[])].includes("Files");
   b.addEventListener("dragover",e=>{if(isFile(e)){e.preventDefault();e.stopPropagation();b.classList.add("file-over")}});
   b.addEventListener("dragleave",()=>b.classList.remove("file-over"));
@@ -385,6 +386,22 @@ document.addEventListener("touchmove",e=>{
 },{passive:false});
 document.addEventListener("touchend",e=>{if(tdrag&&tdrag.active)e.preventDefault();endTouchDrag(true)},{passive:false});
 document.addEventListener("touchcancel",()=>endTouchDrag(false));
+// ---- マウス：押したまま動かすとドラッグ（どのブラウザでも同じ動き）----
+let suppressClick=false;
+document.addEventListener("pointermove",e=>{
+  if(!tdrag||!tdrag.mouse)return;
+  if(!tdrag.active){if(Math.hypot(e.clientX-tdrag.x0,e.clientY-tdrag.y0)<5)return;tdrag.x=e.clientX;tdrag.y=e.clientY;beginTouchDrag()}
+  e.preventDefault();
+  tdrag.x=e.clientX; tdrag.y=e.clientY; placeGhost();
+  const z=zoneAt(tdrag.x,tdrag.y);
+  if(z!==overZone){if(overZone)overZone.classList.remove("over");overZone=z;if(z)z.classList.add("over")}
+  if(tdrag.y<50)scrollBy(0,-12); else if(tdrag.y>innerHeight-50)scrollBy(0,12);
+});
+document.addEventListener("pointerup",e=>{
+  if(!tdrag||!tdrag.mouse)return;
+  if(tdrag.active){suppressClick=true;setTimeout(()=>suppressClick=false,0);endTouchDrag(true)}else tdrag=null;
+});
+document.addEventListener("pointercancel",()=>{if(tdrag&&tdrag.mouse)endTouchDrag(false)});
 document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".card"))e.preventDefault()});
 
 function move(id,tier,beforeId){
