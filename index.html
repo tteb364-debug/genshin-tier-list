@@ -346,7 +346,7 @@ body{animation:pageIn .5s ease both}
     <div class="src" id="src" role="group" aria-label="表示するTier表"></div>
     <p class="src-note" id="srcNote"></p>
     <div class="shared" id="shared" hidden>
-      <span>友達から共有されたTier表を表示しています。</span>
+      <span>友達から共有されたTier表を表示しています（通常・完凸どちらも切り替えて見られます）。</span>
       <button class="btn gold" id="sharedKeep">自分の表として保存</button>
       <button class="btn" id="sharedClose">自分の表に戻る</button>
     </div>
@@ -453,7 +453,7 @@ const EL={pyro:"炎",hydro:"水",anemo:"風",electro:"雷",dendro:"草",cryo:"�
 const KEY="genshin-tier-v3";
 let store={}; try{store=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){store={}}
 let MODE=store.mode==="c6"?"c6":"base";
-try{const q=new URLSearchParams(location.search);if(q.get("tier")){const o=JSON.parse(decodeURIComponent(escape(atob(q.get("tier").replace(/-/g,"+").replace(/_/g,"/")))));MODE=o.m==="c6"?"c6":"base"}}catch(e){}
+try{const q=new URLSearchParams(location.search);if(q.get("tier")){const o=JSON.parse(decodeURIComponent(escape(atob(q.get("tier").replace(/-/g,"+").replace(/_/g,"/")))));MODE=(q.get("mode")||o.m)==="c6"?"c6":"base"}}catch(e){}
 const C6=MODE==="c6";
 const ROSTER=DATA.roster, NAMES=Object.keys(ROSTER).filter(n=>!C6||ROSTER[n][1]===5), NSET=new Set(NAMES), SITES=C6?DATA.c6:DATA.sites, NS=SITES.length;
 if(C6)document.body.classList.add("c6");
@@ -859,9 +859,23 @@ const SITE_URL="https://tteb364-debug.github.io/genshin-tier-list/";
 const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
 const n36=id=>NAMES.indexOf(id).toString(36);
-function encodeRows(){const ro=Object.entries(RO).filter(([id])=>NSET.has(id)).map(([id,r])=>n36(id)+":"+r).join(".");
-  return b64e(JSON.stringify({v:cur,...(C6?{m:"c6"}:{}),...(ro?{o:ro}:{}),r:rows.map(r=>[r.label,r.ids.map(id=>NAMES.indexOf(id)).filter(i=>i>=0).map(i=>i.toString(36)).join("."),r.z?1:0])}))}
-function decodeRows(code){const o=JSON.parse(b64d(code));const ro={};(o.o||"").split(".").filter(Boolean).forEach(t=>{const[a,b]=t.split(":");const id=NAMES[parseInt(a,36)];if(id&&ROLE_COLS.some(c=>c[0]===b))ro[id]=b});
+// 共有リンク v2：通常と完凸の両方の表を入れる（番号は全キャラ一覧での位置）
+const ALL=Object.keys(ROSTER);
+const SET_OF={base:new Set(ALL),c6:new Set(ALL.filter(n=>ROSTER[n][1]===5))};
+const a36=id=>{const i=ALL.indexOf(id);return i<0?"":i.toString(36)};
+function packTab(v,rs,ro){const o={v};
+  if(rs)o.r=rs.map(r=>[r.label,r.ids.map(a36).filter(Boolean).join("."),r.z?1:0]);
+  const os=Object.entries(ro||{}).map(([id,r])=>{const k=a36(id);return k?k+":"+r:""}).filter(Boolean).join(".");if(os)o.o=os;return o}
+function unpackTab(t,nset){const id=s=>{const n=ALL[parseInt(s,36)];return n&&nset.has(n)?n:null};const ro={};
+  (t.o||"").split(".").filter(Boolean).forEach(p=>{const[a,b]=p.split(":");const n=id(a);if(n&&ROLE_COLS.some(c=>c[0]===b))ro[n]=b});
+  return{v:t.v,ro,rows:t.r?t.r.map(([label,s,z])=>({label,ids:s?s.split(".").map(id).filter(Boolean):[],...(z?{z:true}:{})})):null}}
+function encodeRows(){const other=C6?"base":"c6",ov=store[C6?"cur":"curC6"];
+  const o={x:2,m:MODE,[MODE]:packTab(cur,rows,RO)};
+  if(ov)o[other]=packTab(ov,store.rows&&store.rows[ov],store.ro&&store.ro[ov]);
+  return b64e(JSON.stringify(o))}
+function decodeRows(code){const o=JSON.parse(b64d(code));
+  if(o.x===2)return o[MODE]?unpackTab(o[MODE],NSET):null;
+  if((o.m==="c6"?"c6":"base")!==MODE)return null;const ro={};(o.o||"").split(".").filter(Boolean).forEach(t=>{const[a,b]=t.split(":");const id=NAMES[parseInt(a,36)];if(id&&ROLE_COLS.some(c=>c[0]===b))ro[id]=b});
   return{v:o.v,ro,rows:o.r.map(([label,s,z])=>({label,ids:s?s.split(".").map(t=>NAMES[parseInt(t,36)]).filter(Boolean):[],...(z?{z:true}:{})}))}}
 document.getElementById("shareBtn").onclick=()=>{
   const url=SITE_URL+"?tier="+encodeRows();
@@ -871,11 +885,15 @@ document.getElementById("shareBtn").onclick=()=>{
 (function loadShared(){
   let code=null;try{code=new URLSearchParams(location.search).get("tier")}catch(e){}
   if(!code)return;
-  try{const d=decodeRows(code);const rk=Object.keys(ROLE_VIEWS).find(k=>ROLE_VIEWS[k].id===d.v);setRole(rk||"all");renderRoles();if(VIEWS.some(v=>v.id===d.v))cur=d.v;rows=d.rows;RO=d.ro;if(!rows.some(r=>r.z))rows.unshift({label:"Z",ids:[],z:true});sharedMode=true;document.getElementById("shared").hidden=false}
+  try{const d=decodeRows(code);if(!d)return;const rk=Object.keys(ROLE_VIEWS).find(k=>ROLE_VIEWS[k].id===d.v);setRole(rk||"all");renderRoles();if(VIEWS.some(v=>v.id===d.v))cur=d.v;rows=d.rows||fresh();RO=d.ro;if(!rows.some(r=>r.z))rows.unshift({label:"Z",ids:[],z:true});sharedMode=true;document.getElementById("shared").hidden=false}
   catch(e){toast("共有リンクを読み込めませんでした")}
 })();
 function leaveShared(){sharedMode=false;document.getElementById("shared").hidden=true;try{history.replaceState(null,"",location.pathname)}catch(e){}}
-document.getElementById("sharedKeep").onclick=()=>{leaveShared();save();renderSrc();toast("自分の表として保存しました")};
+document.getElementById("sharedKeep").onclick=()=>{
+  try{const o=JSON.parse(b64d(new URLSearchParams(location.search).get("tier")));const other=C6?"base":"c6";
+    if(o.x===2&&o[other]){const d=unpackTab(o[other],SET_OF[other]);store[C6?"cur":"curC6"]=d.v;store.rows=store.rows||{};store.ro=store.ro||{};
+      if(d.rows){if(!d.rows.some(r=>r.z))d.rows.unshift({label:"Z",ids:[],z:true});store.rows[d.v]=d.rows}else delete store.rows[d.v];store.ro[d.v]=d.ro}}catch(e){}
+  leaveShared();save();renderSrc();toast("自分の表として保存しました")};
 document.getElementById("sharedClose").onclick=()=>{leaveShared();if(MODE!==(store.mode==="c6"?"c6":"base")){location.reload();return}setRole(store.role);renderRoles();loadRows();renderSrc();render();toast("自分の表に戻りました")};
 
 // ---- 通常／完凸 切り替え ----
@@ -884,11 +902,11 @@ document.getElementById("lead").textContent=C6?`★5キャラを完凸（6凸）
 document.title=C6?"原神キャラ 完凸Tier表":"原神キャラ Tier表";
 document.querySelectorAll("#modeSw button").forEach(b=>{b.setAttribute("aria-pressed",b.dataset.m===MODE);
   b.onclick=()=>{if(b.dataset.m===MODE)return;
-    if(sharedMode)leaveShared();
+    let code=null;try{code=new URLSearchParams(location.search).get("tier")}catch(e){}
     store.mode=b.dataset.m;persist();
     const r=b.getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,b.dataset.m==="c6"?"#b58cff":"var(--gold-hi)",true);
     const veil=document.createElement("div");veil.className="veil"+(b.dataset.m==="c6"?" to-c6":"");document.body.appendChild(veil);
-    setTimeout(()=>{try{history.replaceState(null,"",location.pathname)}catch(e){}location.reload()},REDUCED?0:520)}});
+    setTimeout(()=>{try{history.replaceState(null,"",code?location.pathname+"?tier="+code+"&mode="+b.dataset.m:location.pathname)}catch(e){}location.reload()},REDUCED?0:520)}});
 
 // ---- 画像にする ----
 const cssVar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
