@@ -18,7 +18,7 @@ img{max-width:100%}
 :root{
   --bg:#eef1f4; --surface:#ffffff; --surface-2:#e3e8ee; --fg:#1b2430; --muted:#5d6a7a; --line:#cfd7e0;
   --accent:#b8892b; --accent-fg:#ffffff; --focus:#2f6fd6; --warn:#b5452f;
-  --r0:#c2366b; --r1:#d9534f; --r2:#e8873a; --r3:#d8b23a; --r4:#9cb84a; --r5:#5fa86a; --r6:#5a8fc2; --r7:#8a7fb8;
+  --rz:linear-gradient(160deg,#1c1530,#4a2c7a 55%,#b8892b); --r0:#c2366b; --r1:#d9534f; --r2:#e8873a; --r3:#d8b23a; --r4:#9cb84a; --r5:#5fa86a; --r6:#5a8fc2; --r7:#8a7fb8;
   --pyro:#e2603f; --hydro:#3a8fe0; --anemo:#33b39a; --electro:#9a5fd6; --dendro:#79b43a; --cryo:#5cc3d8; --geo:#d7a531;
   --font-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
   --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
@@ -59,6 +59,7 @@ h2{font-family:var(--font-display);font-size:22px;margin:0;text-wrap:balance}
 .row{display:grid;grid-template-columns:84px 1fr;border-top:1px solid var(--line);min-height:84px}
 .row:first-child{border-top:0}
 .label{display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:26px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25);outline:none;padding:4px;text-align:center;word-break:break-all}
+.label.z{font-size:34px;letter-spacing:.04em;text-shadow:0 0 10px rgba(255,214,120,.55),0 1px 2px rgba(0,0,0,.4)}
 .drop{display:flex;flex-wrap:wrap;gap:6px;padding:8px;align-content:flex-start;min-width:0;transition:background .15s}
 .drop.over,.drop.target{background:var(--surface-2)}
 .drop.target{cursor:pointer;box-shadow:inset 0 0 0 2px var(--accent)}
@@ -121,7 +122,7 @@ tr.dim{display:none}
   <div class="chips" id="els" role="group" aria-label="元素で絞り込み"></div>
 
   <div class="board" id="board"></div>
-  <p class="hint">カードをドラッグするか、カードをタップしてから移動先の行をタップすると並べ替えできます。並べ替えはサイトごとにこのブラウザへ保存されます。Tier名はクリックで書き換えられます。赤い点はサイト間で評価が大きく割れているキャラです。</p>
+  <p class="hint">カードをドラッグするか、カードをタップしてから移動先の行をタップすると並べ替えできます。並べ替えはサイトごとにこのブラウザへ保存されます。Tier名はクリックで書き換えられます。一番上のZは、どのサイトの表でも最初は空です。好きなキャラを入れてください。赤い点はサイト間で評価が大きく割れているキャラです。</p>
 
   <section class="pool section">
     <h2>未配置</h2>
@@ -188,8 +189,8 @@ let store={}; try{store=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){store
 let cur=store.cur&&VIEWS.some(v=>v.id===store.cur)?store.cur:"avg";
 let rows; // [{label, ids}]
 const view=()=>VIEWS.find(v=>v.id===cur);
-const fresh=()=>view().tiers.map(([label,ids])=>({label,ids:[...ids]}));
-function loadRows(){rows=(store.rows&&store.rows[cur])?JSON.parse(JSON.stringify(store.rows[cur])):fresh()}
+const fresh=()=>[{label:"Z",ids:[],z:true},...view().tiers.map(([label,ids])=>({label,ids:[...ids]}))];
+function loadRows(){rows=(store.rows&&store.rows[cur])?JSON.parse(JSON.stringify(store.rows[cur])):fresh();if(!rows.some(r=>r.z))rows.unshift({label:"Z",ids:[],z:true})}
 function save(){store.cur=cur;store.rows=store.rows||{};store.rows[cur]=rows;try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
 loadRows();
 let selected=null, elFilter=new Set();
@@ -258,7 +259,7 @@ function render(){
   rows.forEach((r,i)=>{
     const row=document.createElement("div");row.className="row";
     const lab=document.createElement("div");lab.className="label";lab.contentEditable="true";lab.spellcheck=false;
-    lab.style.background=colorFor(i,rows.length);lab.textContent=r.label;lab.setAttribute("aria-label",`Tier名 ${r.label}`);
+    lab.style.background=r.z?"var(--rz)":colorFor(i-1,rows.length-1);if(r.z)lab.classList.add("z");lab.textContent=r.label;lab.setAttribute("aria-label",`Tier名 ${r.label}`);
     lab.addEventListener("blur",()=>{r.label=lab.textContent.trim()||r.label;save()});
     lab.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();lab.blur()}});
     const drop=document.createElement("div");drop.className="drop"+(selected?" target":"");drop.dataset.tier=i;
