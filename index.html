@@ -14,125 +14,171 @@ img{max-width:100%}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
 <style>
-/* Layout: 1カラム。ヘッダー → 出典の切り替え → Tier表 → 未配置 → サイト比較表 → 出典一覧 */
+/* Layout: 夜空色の1カラム。ヘッダー → 固定タブ（Tier表 / サイト比較 / 写真・出典）→ 各タブの中身 */
 :root{
-  --bg:#eef1f4; --surface:#ffffff; --surface-2:#e3e8ee; --fg:#1b2430; --muted:#5d6a7a; --line:#cfd7e0;
-  --accent:#b8892b; --accent-fg:#ffffff; --focus:#2f6fd6; --warn:#b5452f;
-  --rz:linear-gradient(160deg,#1c1530,#4a2c7a 55%,#b8892b); --r0:#c2366b; --r1:#d9534f; --r2:#e8873a; --r3:#d8b23a; --r4:#9cb84a; --r5:#5fa86a; --r6:#5a8fc2; --r7:#8a7fb8;
-  --pyro:#e2603f; --hydro:#3a8fe0; --anemo:#33b39a; --electro:#9a5fd6; --dendro:#79b43a; --cryo:#5cc3d8; --geo:#d7a531;
+  color-scheme:dark;
+  --bg:#0c1120; --bg-glow:#1a2448; --panel:#141b2e; --panel-2:#1c2540; --panel-3:#242f50;
+  --line:rgba(217,181,106,.22); --line-strong:rgba(217,181,106,.5);
+  --fg:#ece6d6; --muted:#9aa3b8; --gold:#d9b56a; --gold-hi:#f3dca0; --ink:#0c1120; --warn:#f08a70; --focus:#8fb4ff;
+  --s5a:#a8642e; --s5b:#e3a75a; --s4a:#5a4392; --s4b:#9a7ad0;
+  --rz:linear-gradient(160deg,#1c1530,#4a2c7a 55%,#b8892b);
+  --r0:#c2366b; --r1:#d9534f; --r2:#e8873a; --r3:#d8b23a; --r4:#9cb84a; --r5:#5fa86a; --r6:#5a8fc2; --r7:#8a7fb8;
+  --pyro:#ef6a48; --hydro:#4a9cf0; --anemo:#3cc4a6; --electro:#a96ce6; --dendro:#86c447; --cryo:#7fd4e6; --geo:#e2b23e;
   --font-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
   --font-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121821; --surface:#1a222e; --surface-2:#222c3a; --fg:#e7ecf2; --muted:#9aa7b7; --line:#2e3a4b;
-  --accent:#d8ab4c; --accent-fg:#1a1408; --focus:#7aa9ff; --warn:#f08a70; color-scheme:dark }}
-:root[data-theme="dark"]{
-  --bg:#121821; --surface:#1a222e; --surface-2:#222c3a; --fg:#e7ecf2; --muted:#9aa7b7; --line:#2e3a4b;
-  --accent:#d8ab4c; --accent-fg:#1a1408; --focus:#7aa9ff; --warn:#f08a70; color-scheme:dark }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.6}
-.wrap{max-width:1100px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
-header h1{font-family:var(--font-display);font-size:clamp(28px,5vw,40px);margin:0;letter-spacing:.04em;text-wrap:balance}
-header h1 small{display:block;font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--accent);text-transform:uppercase}
-header p{margin:6px 0 0;color:var(--muted);max-width:68ch}
-a{color:var(--accent)}
-h2{font-family:var(--font-display);font-size:22px;margin:0;text-wrap:balance}
-.section{display:flex;flex-direction:column;gap:10px}
-.src{display:flex;flex-wrap:wrap;gap:8px}
-.src button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;padding:8px 12px;font:inherit;cursor:pointer;text-align:left;display:flex;flex-direction:column;line-height:1.3}
-.src button small{font-size:11px;color:var(--muted)}
-.src button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--surface-2)}
-.src-note{font-size:13px;color:var(--muted);margin:0}
-.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.bar input[type=search]{flex:1 1 200px;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg);font:inherit}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:4px 10px;font:inherit;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.chip .dot{width:9px;height:9px;border-radius:50%}
-.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.btn{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
-.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:700}
-.btn[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.btn:hover,.chip:hover,.src button:hover{filter:brightness(1.05)}
+body{background:var(--bg);background-image:radial-gradient(1200px 500px at 50% -120px,var(--bg-glow),transparent 70%);background-attachment:fixed;color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:var(--gold-hi)}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* ヘッダー */
+header.top{padding-block:30px 18px;text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:.32em;color:var(--gold);text-transform:uppercase}
+.eyebrow::before,.eyebrow::after{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+.eyebrow::after{transform:scaleX(-1)}
+header.top h1{font-family:var(--font-display);font-size:clamp(30px,5.4vw,46px);margin:6px 0 4px;letter-spacing:.08em;color:var(--gold-hi);text-shadow:0 0 24px rgba(217,181,106,.25);text-wrap:balance}
+header.top p{margin:0 auto;color:var(--muted);max-width:60ch;font-size:14px}
+
+/* タブ */
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;background:rgba(12,17,32,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav.tabs .wrap{display:flex;gap:4px;justify-content:center}
+nav.tabs button{flex:0 1 auto;background:none;border:0;color:var(--muted);font:inherit;font-weight:700;font-size:15px;padding:12px 18px;cursor:pointer;position:relative;letter-spacing:.06em}
+nav.tabs button[aria-selected="true"]{color:var(--gold-hi)}
+nav.tabs button[aria-selected="true"]::after{content:"";position:absolute;left:18%;right:18%;bottom:-1px;height:2px;background:var(--gold);box-shadow:0 0 10px var(--gold)}
+nav.tabs button:hover{color:var(--fg)}
+main{padding-block:20px 56px}
+.panel{display:flex;flex-direction:column;gap:14px}
+
+/* 出典切り替え */
+.src{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.src button{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:12px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer;text-align:left;display:flex;flex-direction:column;line-height:1.3}
+.src button small{font-size:11px;font-weight:400;color:var(--muted)}
+.src button[aria-pressed="true"]{border-color:var(--gold);background:linear-gradient(180deg,var(--panel-3),var(--panel-2));box-shadow:0 0 0 1px var(--gold) inset,0 0 18px rgba(217,181,106,.18)}
+.src-note{font-size:13px;color:var(--muted);margin:0}
+
+/* ツールバー */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px}
+.toolbar input[type=search]{flex:1 1 180px;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+.toolbar .sep{flex:1 1 0}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{border:1px solid transparent;background:var(--panel-2);color:var(--fg);border-radius:999px;padding:4px 10px;font:inherit;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip .dot{width:9px;height:9px;border-radius:50%}
+.chip[aria-pressed="true"]{border-color:var(--gold);background:var(--panel-3);color:var(--gold-hi)}
+.btn{border:1px solid var(--line);background:var(--panel-2);color:var(--fg);border-radius:8px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+.btn.gold{background:linear-gradient(180deg,var(--gold-hi),var(--gold));color:var(--ink);border-color:var(--gold);font-weight:700}
+.btn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold-hi);background:var(--panel-3)}
+.btn:hover,.chip:hover,.src button:hover{filter:brightness(1.12)}
 .hint{font-size:13px;color:var(--muted);margin:0}
-.board{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
-.row{display:grid;grid-template-columns:84px 1fr;border-top:1px solid var(--line);min-height:84px}
-.row:first-child{border-top:0}
-.label{display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:26px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25);outline:none;padding:4px;text-align:center;word-break:break-all}
-.label.z{font-size:34px;letter-spacing:.04em;text-shadow:0 0 10px rgba(255,214,120,.55),0 1px 2px rgba(0,0,0,.4)}
-.drop{display:flex;flex-wrap:wrap;gap:6px;padding:8px;align-content:flex-start;min-width:0;transition:background .15s}
-.drop.over,.drop.target{background:var(--surface-2)}
-.drop.target{cursor:pointer;box-shadow:inset 0 0 0 2px var(--accent)}
-.card{width:72px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px 5px;border-radius:8px;background:var(--surface-2);border:1px solid transparent;cursor:grab;user-select:none;-webkit-user-select:none;font:inherit;color:var(--fg);position:relative}
+
+/* Tier表 */
+.board{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:76px 1fr;border-radius:12px;overflow:hidden;background:var(--panel);border:1px solid var(--line);min-height:96px}
+.label{display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:26px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45);outline:none;padding:4px;text-align:center;word-break:break-all;position:relative}
+.label::after{content:"";position:absolute;inset:6px;border:1px solid rgba(255,255,255,.25);border-radius:6px;pointer-events:none}
+.label.z{font-size:34px;letter-spacing:.04em;text-shadow:0 0 12px rgba(255,214,120,.6),0 1px 2px rgba(0,0,0,.4)}
+.drop{display:flex;flex-wrap:wrap;gap:8px;padding:10px;align-content:flex-start;min-width:0;transition:background .15s}
+.drop.over,.drop.target{background:var(--panel-2)}
+.drop.target{cursor:pointer;box-shadow:inset 0 0 0 1px var(--gold)}
+.empty-z{color:var(--muted);font-size:13px;align-self:center;padding-left:4px}
+
+/* キャラカード */
+.card{width:74px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:0;background:none;border:0;cursor:grab;user-select:none;-webkit-user-select:none;font:inherit;color:var(--fg);position:relative;transition:transform .15s}
+.card:hover{transform:translateY(-2px)}
 .card:active{cursor:grabbing}
-.card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
-.card.dragging{opacity:.4}
+.por{width:66px;height:66px;border-radius:12px;overflow:hidden;position:relative;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:26px;color:#fff;
+  background:linear-gradient(160deg,var(--s4a),var(--s4b));box-shadow:0 2px 8px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.18)}
+.card.star5 .por{background:linear-gradient(160deg,var(--s5a),var(--s5b))}
+.por img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.por::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 -18px 18px -14px rgba(0,0,0,.45);pointer-events:none}
+.elb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--el);color:#fff;font-family:var(--font-body);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px rgba(12,17,32,.75);z-index:1}
+.split{position:absolute;top:3px;right:3px;width:10px;height:10px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 2px rgba(12,17,32,.75);z-index:1}
+.nm{font-size:11px;line-height:1.25;text-align:center;font-weight:500;word-break:keep-all;overflow-wrap:anywhere;color:var(--fg)}
+.card.sel .por{box-shadow:0 0 0 2px var(--gold),0 0 16px rgba(217,181,106,.6)}
+.card.dragging{opacity:.35}
 .card.dim{display:none}
-.ava{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:20px;color:#fff;background:var(--el);box-shadow:inset 0 0 0 3px rgba(255,255,255,.35);overflow:hidden}
-.ava img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
-.card.has-img .ava{background:var(--surface);box-shadow:0 0 0 3px var(--el)}
-.card.star5 .ava{box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 0 0 2px var(--accent)}
-.card.has-img.star5 .ava{box-shadow:0 0 0 3px var(--el),0 0 0 5px var(--accent)}
-.card .split{position:absolute;top:2px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--warn)}
-body.photo-mode .card{cursor:copy;border-style:dashed;border-color:var(--muted)}
-.card.file-over{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
-.nm{font-size:11px;line-height:1.25;text-align:center;font-weight:500;word-break:keep-all;overflow-wrap:anywhere}
-.pool .drop{border:1px dashed var(--line);border-radius:10px;min-height:96px;background:var(--surface)}
-.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+body.photo-mode .card .por{outline:2px dashed var(--muted);outline-offset:2px;cursor:copy}
+.card.file-over .por{box-shadow:0 0 0 3px var(--gold)}
+.pool .drop{border:1px dashed var(--line-strong);border-radius:12px;min-height:100px;background:var(--panel)}
+h2{font-family:var(--font-display);font-size:22px;margin:0;color:var(--gold-hi);letter-spacing:.06em;text-wrap:balance}
+
+/* 比較表 */
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
-th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
-th{position:sticky;top:0;background:var(--surface-2);font-size:12px;font-weight:700;letter-spacing:.04em}
+th,td{padding:7px 10px;border-bottom:1px solid rgba(217,181,106,.1);text-align:center;white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel-2);font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--gold-hi)}
 th small{display:block;font-weight:400;color:var(--muted);letter-spacing:0}
-td.name{text-align:left;display:flex;align-items:center;gap:8px}
-td.name .mini{width:28px;height:28px;border-radius:50%;overflow:hidden;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;background:var(--el);box-shadow:0 0 0 2px var(--el)}
-td.name .mini img{width:100%;height:100%;object-fit:cover}
-.pill{display:inline-block;min-width:36px;padding:1px 8px;border-radius:999px;color:#fff;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--panel-2)}
+td.name{text-align:left;display:flex;align-items:center;gap:10px}
+.mini{width:32px;height:32px;border-radius:8px;overflow:hidden;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:14px;background:linear-gradient(160deg,var(--s4a),var(--s4b));position:relative}
+.mini.star5{background:linear-gradient(160deg,var(--s5a),var(--s5b))}
+.mini img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mini i{position:absolute;right:1px;bottom:1px;width:9px;height:9px;border-radius:50%;background:var(--el);box-shadow:0 0 0 1.5px var(--panel)}
+.pill{display:inline-block;min-width:38px;padding:1px 8px;border-radius:999px;color:#fff;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;text-shadow:0 1px 1px rgba(0,0,0,.3)}
 .none{color:var(--muted)}
-.avg{font-variant-numeric:tabular-nums;font-weight:700}
-.bar-avg{display:inline-block;vertical-align:middle;width:60px;height:6px;border-radius:3px;background:var(--surface-2);margin-left:6px;overflow:hidden}
-.bar-avg i{display:block;height:100%;background:var(--accent)}
+.avg{font-variant-numeric:tabular-nums;font-weight:700;color:var(--gold-hi)}
+.bar-avg{display:inline-block;vertical-align:middle;width:60px;height:6px;border-radius:3px;background:var(--panel-3);margin-left:6px;overflow:hidden}
+.bar-avg i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-hi))}
 .flag{font-size:12px;color:var(--warn);font-weight:700}
 tr.dim{display:none}
+
+/* 写真・出典 */
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .sources{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
-.sources div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);font-size:13px;min-width:0;overflow-wrap:anywhere}
+.sources div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel-2);font-size:13px;min-width:0;overflow-wrap:anywhere}
 .sources b{font-size:14px}
 .sources p{margin:4px 0 0;color:var(--muted)}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 16px;border-radius:8px;font-size:14px;z-index:5}
-@media (max-width:520px){.row{grid-template-columns:56px 1fr}.label{font-size:18px}.card{width:62px}.ava{width:38px;height:38px;font-size:17px}}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--gold-hi);color:var(--ink);font-weight:700;padding:8px 16px;border-radius:999px;font-size:14px;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+@media (max-width:560px){
+  .row{grid-template-columns:52px 1fr}.label{font-size:18px}.label.z{font-size:24px}
+  .card{width:60px}.por{width:56px;height:56px;font-size:22px}.drop{gap:6px;padding:8px}
+  nav.tabs button{padding:12px 10px;font-size:14px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1><small>Genshin Impact</small>原神キャラ Tier表</h1>
-    <p>攻略サイト5つのTier表を集めて比較しています。上のボタンで表示するサイトを切り替えられます。「5サイト平均」は、各サイトのランクを点数にして平均したものです。</p>
-  </header>
+<header class="top wrap">
+  <span class="eyebrow">Genshin Impact</span>
+  <h1>原神キャラ Tier表</h1>
+  <p>攻略サイト5つのTier表を集めて比較。サイトを切り替えたり、5サイトの平均で見たりできます。</p>
+</header>
 
-  <section class="section">
+<nav class="tabs" aria-label="表示の切り替え">
+  <div class="wrap" role="tablist">
+    <button role="tab" id="tab-tier" aria-selected="true" aria-controls="p-tier">Tier表</button>
+    <button role="tab" id="tab-cmp" aria-selected="false" aria-controls="p-cmp">サイト比較</button>
+    <button role="tab" id="tab-info" aria-selected="false" aria-controls="p-info">写真・出典</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section class="panel" id="p-tier" role="tabpanel" aria-labelledby="tab-tier">
     <div class="src" id="src" role="group" aria-label="表示するTier表"></div>
     <p class="src-note" id="srcNote"></p>
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="キャラ名で検索" aria-label="キャラ名で検索">
+      <div class="chips els" role="group" aria-label="元素で絞り込み"></div>
+      <span class="sep"></span>
+      <button class="btn" id="copy">テキストでコピー</button>
+      <button class="btn gold" id="reset">このサイトの並びに戻す</button>
+    </div>
+    <div class="board" id="board"></div>
+    <p class="hint">ドラッグ、またはカードをタップしてから行をタップで並べ替え。並べ替えはサイトごとにこのブラウザへ保存されます。Tier名はクリックで書き換えられます。Zは最初は空の特別枠です。右上の赤い点は、サイトによって評価が大きく割れているキャラです。</p>
+    <section class="pool panel">
+      <h2>未配置</h2>
+      <div class="drop" id="pool" data-tier="pool"></div>
+    </section>
   </section>
 
-  <div class="bar">
-    <input type="search" id="q" placeholder="キャラ名で検索" aria-label="キャラ名で検索">
-    <button class="btn" id="copy">テキストでコピー</button>
-    <button class="btn primary" id="reset">このサイトの並びに戻す</button>
-  </div>
-  <div class="chips" id="els" role="group" aria-label="元素で絞り込み"></div>
-
-  <div class="board" id="board"></div>
-  <p class="hint">カードをドラッグするか、カードをタップしてから移動先の行をタップすると並べ替えできます。並べ替えはサイトごとにこのブラウザへ保存されます。Tier名はクリックで書き換えられます。一番上のZは、どのサイトの表でも最初は空です。好きなキャラを入れてください。赤い点はサイト間で評価が大きく割れているキャラです。</p>
-
-  <section class="pool section">
-    <h2>未配置</h2>
-    <div class="drop" id="pool" data-tier="pool"></div>
-  </section>
-
-  <section class="section">
-    <h2>サイト別ランク比較</h2>
-    <div class="bar">
-      <span class="hint">並び順</span>
+  <section class="panel" id="p-cmp" role="tabpanel" aria-labelledby="tab-cmp" hidden>
+    <div class="toolbar">
+      <input type="search" id="q2" placeholder="キャラ名で検索" aria-label="キャラ名で検索">
+      <div class="chips els" role="group" aria-label="元素で絞り込み"></div>
+      <span class="sep"></span>
       <div class="chips" id="sort" role="group" aria-label="並び順">
         <button class="chip" data-sort="avg" aria-pressed="true">平均が高い順</button>
         <button class="chip" data-sort="spread" aria-pressed="false">評価が割れている順</button>
@@ -143,24 +189,25 @@ tr.dim{display:none}
     <p class="hint">点数は各サイトの最上位ランクを100、最下位ランクを0として均等に割り振ったものです。サイトに載っていないキャラは「—」で、平均から除いています。最高と最低の差が45点以上のキャラに「割れ」と表示しています。</p>
   </section>
 
-  <section class="section">
-    <h2>写真</h2>
-    <div class="bar">
-      <button class="btn" id="addPhotos">写真をまとめて追加</button>
-      <button class="btn" id="photoMode" aria-pressed="false">1人ずつ写真を設定</button>
-      <button class="btn" id="clearPhotos">追加した写真を消す</button>
-      <input type="file" id="bulkFile" accept="image/*" multiple hidden>
-      <input type="file" id="oneFile" accept="image/*" hidden>
+  <section class="panel" id="p-info" role="tabpanel" aria-labelledby="tab-info" hidden>
+    <div class="box">
+      <h2>写真</h2>
+      <div class="bar">
+        <button class="btn" id="addPhotos">写真をまとめて追加</button>
+        <button class="btn" id="photoMode" aria-pressed="false">1人ずつ写真を設定</button>
+        <button class="btn" id="clearPhotos">追加した写真を消す</button>
+        <input type="file" id="bulkFile" accept="image/*" multiple hidden>
+        <input type="file" id="oneFile" accept="image/*" hidden>
+      </div>
+      <p class="hint">アイコン画像は<a href="https://game8.jp/genshin/352210" target="_blank" rel="noopener">ゲームエイト</a>掲載のものです。差し替えたいときは、ファイル名にキャラ名が入った画像（例：フリーナ.png）をまとめて選ぶか、「1人ずつ写真を設定」をオンにしてからTier表タブでカードをタップしてください。画像をカードへ直接ドロップしても設定できます。写真はこのブラウザにだけ保存されます。</p>
     </div>
-    <p class="hint">アイコン画像は<a href="https://game8.jp/genshin/352210" target="_blank" rel="noopener">ゲームエイト</a>掲載のものです。差し替えたいときは、ファイル名にキャラ名が入った画像（例：フリーナ.png）をまとめて選ぶか、「1人ずつ写真を設定」をオンにしてカードをタップしてください。画像をカードへ直接ドロップしても設定できます。</p>
+    <div class="box">
+      <h2>出典</h2>
+      <div class="sources" id="sources"></div>
+      <p class="hint">ゲーム乱舞のTier表も確認しましたが、最終更新が2025年1月で古いため除いています。</p>
+    </div>
   </section>
-
-  <section class="section">
-    <h2>出典</h2>
-    <div class="sources" id="sources"></div>
-    <p class="hint">ゲーム乱舞のTier表も確認しましたが、最終更新が2025年1月で古いため除いています。</p>
-  </section>
-</div>
+</main>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -172,28 +219,34 @@ const PAL=["--r0","--r1","--r2","--r3","--r4","--r5","--r6","--r7"];
 const colorFor=(i,n)=>`var(${PAL[n<=1?0:Math.round(i*(PAL.length-1)/(n-1))]})`;
 
 // ---- 点数化と平均 ----
-const SCORE={}; // name -> {siteId:{label,score}}
-NAMES.forEach(n=>SCORE[n]={});
+const SCORE={}; NAMES.forEach(n=>SCORE[n]={});
 SITES.forEach(s=>{const n=s.tiers.length;s.tiers.forEach(([label,ids],i)=>ids.forEach(id=>{SCORE[id][s.id]={label,score:n<=1?100:Math.round(100*(1-i/(n-1)))}}))});
 const STATS={};
-NAMES.forEach(n=>{const v=Object.values(SCORE[n]).map(x=>x.score);const avg=v.reduce((a,b)=>a+b,0)/v.length;STATS[n]={avg,spread:Math.max(...v)-Math.min(...v),count:v.length}});
+NAMES.forEach(n=>{const v=Object.values(SCORE[n]).map(x=>x.score);STATS[n]={avg:v.reduce((a,b)=>a+b,0)/v.length,spread:Math.max(...v)-Math.min(...v)}});
 const AVG_CUTS=[["SSS",85],["SS",70],["S",55],["A",40],["B",25],["C",10],["D",-1]];
-const AVG_SITE={id:"avg",name:"5サイト平均",updated:"",note:"平均点で分けています（SSS 85点以上・SS 70点以上・S 55点以上・A 40点以上・B 25点以上・C 10点以上・D それ未満）",
-  tiers:AVG_CUTS.map(([l])=>[l,[]])};
-[...NAMES].sort((a,b)=>STATS[b].avg-STATS[a].avg).forEach(n=>{const i=AVG_CUTS.findIndex(([,c])=>STATS[n].avg>=c);AVG_SITE.tiers[i][1].push(n)});
+const AVG_SITE={id:"avg",name:"5サイト平均",note:"平均点で分けています（SSS 85点以上・SS 70点以上・S 55点以上・A 40点以上・B 25点以上・C 10点以上・D それ未満）",tiers:AVG_CUTS.map(([l])=>[l,[]])};
+[...NAMES].sort((a,b)=>STATS[b].avg-STATS[a].avg).forEach(n=>{AVG_SITE.tiers[AVG_CUTS.findIndex(([,c])=>STATS[n].avg>=c)][1].push(n)});
 const VIEWS=[AVG_SITE,...SITES];
 
-// ---- 状態（サイトごとに保存）----
+// ---- 状態 ----
 const KEY="genshin-tier-v3";
 let store={}; try{store=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){store={}}
-let cur=store.cur&&VIEWS.some(v=>v.id===store.cur)?store.cur:"avg";
-let rows; // [{label, ids}]
+let cur="avg";
+if(store.cur&&VIEWS.some(v=>v.id===store.cur))cur=store.cur;
+let rows;
 const view=()=>VIEWS.find(v=>v.id===cur);
 const fresh=()=>[{label:"Z",ids:[],z:true},...view().tiers.map(([label,ids])=>({label,ids:[...ids]}))];
 function loadRows(){rows=(store.rows&&store.rows[cur])?JSON.parse(JSON.stringify(store.rows[cur])):fresh();if(!rows.some(r=>r.z))rows.unshift({label:"Z",ids:[],z:true})}
-function save(){store.cur=cur;store.rows=store.rows||{};store.rows[cur]=rows;try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+function save(){store.cur=cur;store.rows=store.rows||{};store.rows[cur]=rows;persist()}
 loadRows();
-let selected=null, elFilter=new Set();
+let selected=null, elFilter=new Set(), query="";
+
+// ---- タブ ----
+const TABS=["tier","cmp","info"];
+function showTab(t){TABS.forEach(x=>{document.getElementById("tab-"+x).setAttribute("aria-selected",x===t);document.getElementById("p-"+x).hidden=x!==t});store.tab=t;persist()}
+TABS.forEach(t=>document.getElementById("tab-"+t).onclick=()=>showTab(t));
+showTab(TABS.includes(store.tab)?store.tab:"tier");
 
 // ---- 写真 ----
 const IMG_KEY="genshin-tier-img-v1";
@@ -203,7 +256,7 @@ let photoMode=false, photoTarget=null;
 const oneFile=document.getElementById("oneFile"), bulkFile=document.getElementById("bulkFile");
 function saveImg(){try{localStorage.setItem(IMG_KEY,JSON.stringify(IMG));return true}catch(e){return false}}
 function shrink(file){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const im=new Image();
-  im.onload=()=>{const S=96,cv=document.createElement("canvas");cv.width=cv.height=S;const s=Math.min(im.width,im.height);
+  im.onload=()=>{const S=128,cv=document.createElement("canvas");cv.width=cv.height=S;const s=Math.min(im.width,im.height);
     cv.getContext("2d").drawImage(im,(im.width-s)/2,Math.max(0,(im.height-s)/4),s,s,0,0,S,S);URL.revokeObjectURL(url);
     let d=cv.toDataURL("image/webp",0.85);if(!d.startsWith("data:image/webp"))d=cv.toDataURL("image/png");res(d)};
   im.onerror=()=>{URL.revokeObjectURL(url);rej()};im.src=url})}
@@ -218,17 +271,17 @@ bulkFile.addEventListener("change",async()=>{let ok=0;const miss=[];
   const sv=saveImg();renderAll();toast(`${ok}人に写真を設定しました`+(miss.length?`／名前が合わなかったファイル ${miss.length}件`:"")+(sv?"":"（容量不足で保存できませんでした）"));bulkFile.value=""});
 document.getElementById("addPhotos").onclick=()=>bulkFile.click();
 document.getElementById("photoMode").onclick=e=>{photoMode=!photoMode;selected=null;e.currentTarget.setAttribute("aria-pressed",photoMode);
-  document.body.classList.toggle("photo-mode",photoMode);toast(photoMode?"カードをタップすると写真を選べます":"並べ替えに戻りました");render()};
+  document.body.classList.toggle("photo-mode",photoMode);
+  if(photoMode){showTab("tier");toast("カードをタップすると写真を選べます")}else toast("並べ替えに戻りました");render()};
 
-// ---- カードとドラッグ ----
+// ---- カード ----
 const glyph=n=>n.startsWith("主人公")?"旅":[...n][0];
 function card(id){
-  const [el,r]=ROSTER[id], b=document.createElement("button"), img=imgOf(id);
-  b.className="card"+(r===5?" star5":"")+(img?" has-img":""); b.draggable=true; b.dataset.id=id; b.type="button";
+  const [el,r]=ROSTER[id], b=document.createElement("button"), img=imgOf(id), st=STATS[id];
+  b.className="card"+(r===5?" star5":""); b.draggable=true; b.dataset.id=id; b.type="button";
   b.style.setProperty("--el",`var(--${el})`);
-  const st=STATS[id]; const ranks=VIEWS.slice(1).map(s=>`${s.name} ${SCORE[id][s.id]?.label||"—"}`).join(" / ");
-  b.title=`${id}（${EL[el]}・★${r}）\n${ranks}\n平均 ${Math.round(st.avg)}点`;
-  b.innerHTML=`<span class="ava" aria-hidden="true">${img?`<img src="${img}" alt="">`:glyph(id)}</span><span class="nm">${id}</span>${st.spread>=45?'<span class="split" aria-label="評価が割れている"></span>':""}`;
+  b.title=`${id}（${EL[el]}・★${r}）\n`+SITES.map(s=>`${s.name} ${SCORE[id][s.id]?.label||"—"}`).join(" / ")+`\n平均 ${Math.round(st.avg)}点`;
+  b.innerHTML=`<span class="por" aria-hidden="true">${img?`<img src="${img}" alt="">`:glyph(id)}<span class="elb">${EL[el]}</span>${st.spread>=45?'<span class="split"></span>':""}</span><span class="nm">${id}</span>`;
   b.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain",id);b.classList.add("dragging")});
   b.addEventListener("dragend",()=>b.classList.remove("dragging"));
   b.addEventListener("click",e=>{e.stopPropagation();if(photoMode){photoTarget=id;oneFile.value="";oneFile.click();return}selected=selected===id?null:id;render()});
@@ -252,18 +305,19 @@ function move(id,tier,beforeId){
   if(tier!=="pool"){const arr=rows[+tier].ids;const i=beforeId?arr.indexOf(beforeId):-1;i<0?arr.push(id):arr.splice(i,0,id)}
   save();render();
 }
-const visible=id=>{const q=document.getElementById("q").value.trim();return(!q||id.includes(q))&&(!elFilter.size||elFilter.has(ROSTER[id][0]))};
+const visible=id=>(!query||id.includes(query))&&(!elFilter.size||elFilter.has(ROSTER[id][0]));
 
 function render(){
   const board=document.getElementById("board");board.innerHTML="";
   rows.forEach((r,i)=>{
     const row=document.createElement("div");row.className="row";
-    const lab=document.createElement("div");lab.className="label";lab.contentEditable="true";lab.spellcheck=false;
-    lab.style.background=r.z?"var(--rz)":colorFor(i-1,rows.length-1);if(r.z)lab.classList.add("z");lab.textContent=r.label;lab.setAttribute("aria-label",`Tier名 ${r.label}`);
+    const lab=document.createElement("div");lab.className="label"+(r.z?" z":"");lab.contentEditable="true";lab.spellcheck=false;
+    lab.style.background=r.z?"var(--rz)":colorFor(i-1,rows.length-1);lab.textContent=r.label;lab.setAttribute("aria-label",`Tier名 ${r.label}`);
     lab.addEventListener("blur",()=>{r.label=lab.textContent.trim()||r.label;save()});
     lab.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();lab.blur()}});
     const drop=document.createElement("div");drop.className="drop"+(selected?" target":"");drop.dataset.tier=i;
     r.ids.forEach(id=>{if(!ROSTER[id])return;const c=card(id);if(!visible(id))c.classList.add("dim");if(id===selected)c.classList.add("sel");drop.appendChild(c)});
+    if(r.z&&!r.ids.length)drop.innerHTML='<span class="empty-z">ここにキャラをドラッグ</span>';
     bindDrop(drop);row.append(lab,drop);board.appendChild(row);
   });
   const pool=document.getElementById("pool");pool.innerHTML="";pool.classList.toggle("target",!!selected);
@@ -272,27 +326,25 @@ function render(){
   if(!pool.children.length)pool.innerHTML='<span class="hint">全キャラ配置済みです。ここにドロップすると未配置に戻せます。</span>';
 }
 
-// ---- 出典ボタン ----
 function renderSrc(){
   const box=document.getElementById("src");box.innerHTML="";
   VIEWS.forEach(v=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-pressed",v.id===cur);
     b.innerHTML=`${v.name}<small>${v.id==="avg"?"5サイトの点数を平均":v.updated+"更新"}</small>`;
-    b.onclick=()=>{cur=v.id;selected=null;loadRows();store.cur=cur;try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){};renderSrc();render()};
+    b.onclick=()=>{cur=v.id;selected=null;loadRows();store.cur=cur;persist();renderSrc();render()};
     box.appendChild(b)});
   const v=view();const missing=NAMES.length-v.tiers.reduce((a,t)=>a+t[1].length,0);
-  document.getElementById("srcNote").innerHTML=(v.id==="avg"?v.note:`<a href="${v.url}" target="_blank" rel="noopener">${v.name}のTier表</a>（${v.updated}更新）。${v.note}。`)+(missing?` このサイトに載っていない${missing}人は「未配置」に入っています。`:"");
+  document.getElementById("srcNote").innerHTML=(v.id==="avg"?v.note+"。":`<a href="${v.url}" target="_blank" rel="noopener">${v.name}のTier表</a>（${v.updated}更新）。${v.note}。`)+(missing?` このサイトに載っていない${missing}人は「未配置」に入っています。`:"");
 }
 
-// ---- 比較表 ----
 let sortBy="avg";
 function renderTable(){
   const t=document.getElementById("cmp");
   const head=`<thead><tr><th>キャラ</th><th>平均<small>点</small></th>${SITES.map(s=>`<th>${s.name}<small>${s.updated.replace(/（.*）/,"")}</small></th>`).join("")}<th>差<small>最高−最低</small></th></tr></thead>`;
   const list=[...NAMES].sort(sortBy==="name"?(a,b)=>a.localeCompare(b,"ja"):sortBy==="spread"?(a,b)=>STATS[b].spread-STATS[a].spread||STATS[b].avg-STATS[a].avg:(a,b)=>STATS[b].avg-STATS[a].avg);
-  const body=list.map(n=>{const st=STATS[n],img=imgOf(n),[el]=ROSTER[n];
+  const body=list.map(n=>{const st=STATS[n],img=imgOf(n),[el,r]=ROSTER[n];
     const cells=SITES.map(s=>{const x=SCORE[n][s.id];if(!x)return'<td class="none">—</td>';const i=s.tiers.findIndex(t=>t[0]===x.label);
       return `<td><span class="pill" style="background:${colorFor(i,s.tiers.length)}" title="${x.score}点">${x.label}</span></td>`}).join("");
-    return `<tr data-n="${n}"${visible(n)?"":' class="dim"'}><td class="name" style="--el:var(--${el})"><span class="mini">${img?`<img src="${img}" alt="">`:glyph(n)}</span>${n}</td>`+
+    return `<tr${visible(n)?"":' class="dim"'}><td class="name"><span class="mini${r===5?" star5":""}" style="--el:var(--${el})">${img?`<img src="${img}" alt="">`:glyph(n)}<i></i></span>${n}</td>`+
       `<td class="avg">${Math.round(st.avg)}<span class="bar-avg"><i style="width:${Math.round(st.avg)}%"></i></span></td>${cells}`+
       `<td>${st.spread}${st.spread>=45?' <span class="flag">割れ</span>':""}</td></tr>`}).join("");
   t.innerHTML=head+`<tbody>${body}</tbody>`;
@@ -303,12 +355,15 @@ function renderSources(){
   document.getElementById("sources").innerHTML=SITES.map(s=>`<div><b><a href="${s.url}" target="_blank" rel="noopener">${s.name}</a></b><p>${s.updated}更新・${s.tiers.length}段階（${s.tiers.map(t=>t[0]).join(" / ")}）</p><p>${s.note}</p></div>`).join("");
 }
 
-// ---- 操作 ----
-const els=document.getElementById("els");
-Object.entries(EL).forEach(([k,v])=>{const b=document.createElement("button");b.className="chip";b.type="button";b.setAttribute("aria-pressed","false");
+// ---- 絞り込み（2つのタブで共有）----
+const elGroups=[...document.querySelectorAll(".els")];
+function syncEls(){elGroups.forEach(g=>g.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",elFilter.has(b.dataset.el))))}
+elGroups.forEach(g=>Object.entries(EL).forEach(([k,v])=>{const b=document.createElement("button");b.className="chip";b.type="button";b.dataset.el=k;b.setAttribute("aria-pressed","false");
   b.innerHTML=`<span class="dot" style="background:var(--${k})"></span>${v}`;
-  b.onclick=()=>{elFilter.has(k)?elFilter.delete(k):elFilter.add(k);b.setAttribute("aria-pressed",elFilter.has(k));render();renderTable()};els.appendChild(b)});
-document.getElementById("q").addEventListener("input",()=>{render();renderTable()});
+  b.onclick=()=>{elFilter.has(k)?elFilter.delete(k):elFilter.add(k);syncEls();renderAll()};g.appendChild(b)}));
+const qs=[document.getElementById("q"),document.getElementById("q2")];
+qs.forEach(inp=>inp.addEventListener("input",()=>{query=inp.value.trim();qs.forEach(o=>{if(o!==inp)o.value=inp.value});renderAll()}));
+
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2000)}
 let pending=null;
 function confirmBtn(btn,label,fn){if(pending===btn){pending=null;btn.textContent=label;fn();return}
