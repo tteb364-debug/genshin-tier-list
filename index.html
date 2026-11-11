@@ -198,7 +198,6 @@ header.top h1{background:linear-gradient(100deg,var(--gold) 0%,var(--gold-hi) 40
 @keyframes titleShine{0%,100%{background-position:100% 0}50%{background-position:0 0}}
 .eyebrow{animation:fadeDown .8s ease both}
 @keyframes fadeDown{from{opacity:.2;transform:translateY(-6px)}to{opacity:1;transform:none}}
-.row{animation:rowIn .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0s)}
 @keyframes rowIn{from{opacity:.15;transform:translateX(-14px)}to{opacity:1;transform:none}}
 .label.z{background-size:220% 220%!important;animation:zFlow 5s ease-in-out infinite}
 .label.z::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,226,150,.45),transparent 60%);animation:zPulse 2.4s ease-in-out infinite;pointer-events:none}
@@ -229,7 +228,31 @@ nav.tabs button[aria-selected="true"]::after{animation:tabGlow 2.6s ease-in-out 
 @keyframes toastIn{from{transform:translate(-50%,16px) scale(.9);opacity:.3}to{transform:translate(-50%,0)}}
 .spark{position:fixed;z-index:6;width:8px;height:8px;margin:-4px 0 0 -4px;pointer-events:none;background:radial-gradient(circle,#fff,var(--c) 45%,transparent 70%);border-radius:50%}
 tbody tr{transition:background .2s}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* 行：スクロールで出現・元素バランス */
+.row.pre{opacity:0}
+.row.in{animation:rowIn .55s cubic-bezier(.2,.8,.2,1) both}
+.row.in .card{animation:cardIn .45s cubic-bezier(.2,1.3,.4,1) both;animation-delay:calc(var(--i,0)*28ms + .1s)}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px) scale(.85)}to{opacity:1;transform:none}}
+.drop{position:relative}
+.elbar{position:absolute;left:0;right:0;bottom:0;height:4px;display:flex;opacity:.85;pointer-events:none}
+.elbar i{height:100%;transition:flex-grow .4s}
+.cnt{position:absolute;right:8px;top:6px;font-size:11px;color:var(--muted);pointer-events:none;font-variant-numeric:tabular-nums}
+/* おまかせ1人 */
+.pick{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(5,8,18,.78);backdrop-filter:blur(4px);overflow:hidden}
+.pick[hidden]{display:none}
+.pick .flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,var(--pc) 0%,transparent 60%);opacity:0;pointer-events:none}
+.pick .star{position:absolute;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 12px 4px var(--pc),0 0 40px 10px var(--pc)}
+.pick .star::after{content:"";position:absolute;right:50%;top:50%;width:220px;height:3px;transform-origin:right center;transform:translateY(-50%) rotate(-35deg);background:linear-gradient(270deg,var(--pc),transparent)}
+.pick .res{display:flex;flex-direction:column;align-items:center;gap:12px;opacity:0;text-align:center}
+.pick .res .d-por{width:150px;height:150px;font-size:60px}
+.pick .res h3{font-family:var(--font-display);font-size:30px;margin:0;color:var(--gold-hi)}
+.pick .stars{color:var(--pc);letter-spacing:.2em;font-size:18px;text-shadow:0 0 10px var(--pc)}
+.pick .row2{display:flex;gap:8px}
+/* 詳細の前後移動 */
+.d-nav{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:8px}
+.d-nav .btn{min-width:44px}
+.d-rank{font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.row.pre{opacity:1}}
 </style>
 </head>
 <body>
@@ -269,6 +292,7 @@ tbody tr{transition:background .2s}
       <div class="chips els" role="group" aria-label="元素で絞り込み"></div>
       <span class="sep"></span>
       <button class="btn edit-only" id="undo" disabled>元に戻す</button>
+      <button class="btn" id="pickBtn">おまかせ1人</button>
       <button class="btn" id="shareBtn">共有リンク</button>
       <button class="btn" id="imgBtn">画像にする</button>
       <button class="btn" id="copy">テキストでコピー</button>
@@ -328,7 +352,17 @@ tbody tr{transition:background .2s}
     </div>
   </div>
   <div class="d-sites" id="dSites"></div>
+  <div class="d-nav"><button class="btn" id="dPrev" aria-label="前のキャラ">‹ 前</button><span class="d-rank" id="dRank"></span><button class="btn" id="dNext" aria-label="次のキャラ">次 ›</button></div>
 </dialog>
+<div class="pick" id="pick" hidden>
+  <div class="flash"></div>
+  <div class="res" id="pickRes" role="dialog" aria-label="おまかせ1人の結果">
+    <div class="stars" id="pickStars"></div>
+    <div class="d-por" id="pickPor"></div>
+    <h3 id="pickName"></h3>
+    <div class="row2"><button class="btn gold" id="pickMore">詳しく見る</button><button class="btn" id="pickAgain">もう1回</button><button class="btn" id="pickClose">閉じる</button></div>
+  </div>
+</div>
 <dialog id="imgDlg" class="wide" aria-label="Tier表の画像">
   <button class="x" id="imgClose" aria-label="閉じる">×</button>
   <h3>Tier表の画像</h3>
@@ -511,22 +545,32 @@ function burst(x,y,color,big){
       {duration:600+Math.random()*500,easing:"cubic-bezier(.15,.7,.3,1)"}).onfinish=()=>s.remove();
   }
 }
+const rowIO="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.remove("pre");e.target.classList.add("in");rowIO.unobserve(e.target);
+  setTimeout(()=>e.target.classList.remove("in"),1600)}}),{rootMargin:"0px 0px -40px 0px"}):{observe:r=>r.classList.remove("pre"),unobserve(){}};
 const rarFilter=new Set();
 const visible=id=>(!query||id.includes(query))&&(!elFilter.size||elFilter.has(ROSTER[id][0]))&&(!rarFilter.size||rarFilter.has(ROSTER[id][1]));
 
 function render(quiet){
   const board=document.getElementById("board");board.innerHTML="";
   rows.forEach((r,i)=>{
-    const row=document.createElement("div");row.className="row";
-    if(quiet)row.style.animation="none";else row.style.setProperty("--d",`${i*0.06}s`);
+    const row=document.createElement("div");row.className="row"+(quiet||REDUCED?"":" pre");
     const lab=document.createElement("div");lab.className="label"+(r.z?" z":"");lab.contentEditable=editMode?"true":"false";lab.spellcheck=false;
     lab.style.background=r.z?"var(--rz)":colorFor(i-1,rows.length-1);lab.textContent=r.label;lab.setAttribute("aria-label",`Tier名 ${r.label}`);
     lab.addEventListener("blur",()=>{const v=lab.textContent.trim()||r.label;if(v!==r.label){pushHistory();r.label=v;save()}lab.textContent=r.label});
     lab.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();lab.blur()}});
     const drop=document.createElement("div");drop.className="drop"+(selected?" target":"");drop.dataset.tier=i;
-    r.ids.forEach(id=>{if(!ROSTER[id])return;const c=card(id);if(!visible(id))c.classList.add("dim");if(id===selected)c.classList.add("sel");drop.appendChild(c)});
+    r.ids.forEach((id,k)=>{if(!ROSTER[id])return;const c=card(id);c.style.setProperty("--i",Math.min(k,24));if(!visible(id))c.classList.add("dim");if(id===selected)c.classList.add("sel");drop.appendChild(c)});
     if(r.z&&!r.ids.length)drop.innerHTML=`<span class="empty-z">${editMode?"ここにキャラをドラッグ":"「編集する」に切り替えると、ここにキャラを入れられます"}</span>`;
+    const ids=r.ids.filter(id=>ROSTER[id]);
+    if(ids.length){
+      const cnt={};ids.forEach(id=>{const e=ROSTER[id][0];cnt[e]=(cnt[e]||0)+1});
+      const bar=document.createElement("div");bar.className="elbar";bar.title=Object.keys(EL).filter(e=>cnt[e]).map(e=>`${EL[e]} ${cnt[e]}`).join(" / ");
+      bar.innerHTML=Object.keys(EL).filter(e=>cnt[e]).map(e=>`<i style="flex-grow:${cnt[e]};background:var(--${e})"></i>`).join("");
+      const n=document.createElement("span");n.className="cnt";n.textContent=ids.length+"人";
+      drop.append(bar,n);
+    }
     bindDrop(drop);row.append(lab,drop);board.appendChild(row);
+    if(row.classList.contains("pre"))rowIO.observe(row);
   });
   const pool=document.getElementById("pool");pool.innerHTML="";pool.classList.toggle("target",!!selected);
   const placed=new Set(rows.flatMap(r=>r.ids));
@@ -572,7 +616,7 @@ elGroups.forEach(g=>Object.entries(EL).forEach(([k,v])=>{const b=document.create
 elGroups.forEach(g=>[5,4].forEach(r=>{const b=document.createElement("button");b.className="chip rar";b.type="button";b.dataset.r=r;b.setAttribute("aria-pressed","false");
   b.innerHTML=`<span class="dot" style="background:linear-gradient(160deg,var(--s${r}a),var(--s${r}b))"></span>★${r}`;
   b.onclick=()=>{rarFilter.has(r)?rarFilter.delete(r):rarFilter.add(r);elGroups.forEach(gg=>gg.querySelectorAll(".rar").forEach(x=>x.setAttribute("aria-pressed",rarFilter.has(+x.dataset.r))));renderAll()};g.appendChild(b)}));
-document.getElementById("cmp").addEventListener("click",e=>{const tr=e.target.closest("tr[data-n]");if(tr)openDetail(tr.dataset.n)});
+document.getElementById("cmp").addEventListener("click",e=>{const tr=e.target.closest("tr[data-n]");if(tr)openDetail(tr.dataset.n,[...document.querySelectorAll("#cmp tr[data-n]:not(.dim)")].map(t=>t.dataset.n))});
 const qs=[document.getElementById("q"),document.getElementById("q2")];
 qs.forEach(inp=>inp.addEventListener("input",()=>{query=inp.value.trim();qs.forEach(o=>{if(o!==inp)o.value=inp.value});renderAll()}));
 
@@ -598,7 +642,14 @@ document.getElementById("undo").onclick=undo;
 
 // ---- キャラ詳細 ----
 const dlg=document.getElementById("dlg");
-function openDetail(id){
+let dList=[],dId=null;
+const RANK=[...NAMES].sort((a,b)=>STATS[b].avg-STATS[a].avg);
+function boardOrder(){const placed=rows.flatMap(r=>r.ids).filter(id=>ROSTER[id]);const s=new Set(placed);return placed.concat(NAMES.filter(n=>!s.has(n))).filter(visible)}
+function openDetail(id,list,dir){
+  dList=list||(dlg.open&&dList.includes(id)?dList:boardOrder());if(!dList.includes(id))dList=[id,...dList];dId=id;
+  const k=dList.indexOf(id);
+  document.getElementById("dRank").textContent=`${k+1} / ${dList.length}　・　平均ランキング ${RANK.indexOf(id)+1}位`;
+  document.getElementById("dPrev").disabled=k<=0;document.getElementById("dNext").disabled=k>=dList.length-1;
   const [el,r]=ROSTER[id],st=STATS[id],img=imgOf(id);
   const por=document.getElementById("dPor");por.className="d-por"+(r===5?" star5":"");por.style.setProperty("--el",`var(--${el})`);
   por.innerHTML=img?`<img src="${img}" alt="">`:glyph(id);
@@ -611,9 +662,55 @@ function openDetail(id){
   document.getElementById("dSites").innerHTML=SITES.map((s,k)=>{const x=SCORE[id][s.id];if(!x)return `<div class="d-site"><span>${s.name}</span><span class="none">—</span><span class="hint">掲載なし</span></div>`;
     const i=s.tiers.findIndex(t=>t[0]===x.label),c=colorFor(i,s.tiers.length);
     return `<div class="d-site"><span>${s.name}</span><span class="pill" style="background:${c}">${x.label}</span><span class="bar2"><i style="width:${Math.max(4,x.score)}%;background:${c};animation-delay:${k*0.06}s"></i></span></div>`}).join("");
-  if(typeof dlg.showModal==="function")dlg.showModal();else dlg.setAttribute("open","");
+  const wasOpen=dlg.open;
+  if(!wasOpen){if(typeof dlg.showModal==="function")dlg.showModal();else dlg.setAttribute("open","")}
+  if(dir&&!REDUCED)document.querySelector("#dlg .d-head").animate([{opacity:.2,transform:`translateX(${dir*28}px)`},{opacity:1,transform:"none"}],{duration:280,easing:"cubic-bezier(.2,.8,.2,1)"});
+  setTimeout(()=>{const rc=por.getBoundingClientRect();if(rc.width)burst(rc.left+rc.width/2,rc.top+rc.height/2,`var(--${el})`,r===5)},wasOpen?0:180);
 }
+function stepDetail(d){const k=dList.indexOf(dId)+d;if(k>=0&&k<dList.length)openDetail(dList[k],dList,d)}
+document.getElementById("dPrev").onclick=()=>stepDetail(-1);
+document.getElementById("dNext").onclick=()=>stepDetail(1);
+dlg.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"){e.preventDefault();stepDetail(-1)}if(e.key==="ArrowRight"){e.preventDefault();stepDetail(1)}});
+let swX=null;
+dlg.addEventListener("touchstart",e=>{swX=e.touches[0].clientX},{passive:true});
+dlg.addEventListener("touchend",e=>{if(swX==null)return;const dx=e.changedTouches[0].clientX-swX;swX=null;if(Math.abs(dx)>50)stepDetail(dx<0?1:-1)},{passive:true});
 document.getElementById("dClose").onclick=()=>dlg.close();
+
+// ---- おまかせ1人 ----
+const pick=document.getElementById("pick");
+function runPick(){
+  const pool=NAMES.filter(visible);if(!pool.length){toast("条件に合うキャラがいません");return}
+  const id=pool[Math.floor(Math.random()*pool.length)],[el,r]=ROSTER[id],img=imgOf(id);
+  const pc=r===5?"#f3c86a":"#b58cff";pick.style.setProperty("--pc",pc);
+  const por=document.getElementById("pickPor");por.className="d-por"+(r===5?" star5":"");por.style.setProperty("--el",`var(--${el})`);
+  por.innerHTML=img?`<img src="${img}" alt="">`:glyph(id);
+  document.getElementById("pickName").textContent=id;
+  document.getElementById("pickStars").textContent="★".repeat(r);
+  pick.dataset.id=id;pick.hidden=false;
+  const res=document.getElementById("pickRes"),flash=pick.querySelector(".flash");
+  pick.querySelectorAll(".star").forEach(s=>s.remove());
+  if(REDUCED){res.style.opacity=1;document.getElementById("pickMore").focus();return}
+  res.style.opacity=0;
+  const st=document.createElement("span");st.className="star";pick.appendChild(st);
+  const W=innerWidth,H=innerHeight;
+  st.animate([{transform:`translate(${W*.95}px,${-H*.1}px) scale(.6)`},{transform:`translate(${W/2-5}px,${H/2-5}px) scale(1.4)`}],{duration:900,easing:"cubic-bezier(.5,0,.8,.6)",fill:"forwards"}).onfinish=()=>{
+    st.remove();
+    flash.animate([{opacity:0},{opacity:1,offset:.25},{opacity:0}],{duration:900,easing:"ease-out"});
+    burst(W/2,H/2,pc,true);burst(W/2,H/2,`var(--${el})`,true);
+    res.animate([{opacity:0,transform:"scale(.4) rotate(-8deg)"},{opacity:1,transform:"scale(1.06)",offset:.7},{opacity:1,transform:"none"}],{duration:650,easing:"cubic-bezier(.2,.9,.3,1)",fill:"forwards"});
+    document.getElementById("pickMore").focus();
+  };
+}
+function closePick(){pick.hidden=true}
+document.getElementById("pickBtn").onclick=runPick;
+document.getElementById("pickAgain").onclick=runPick;
+document.getElementById("pickClose").onclick=closePick;
+document.getElementById("pickMore").onclick=()=>{const id=pick.dataset.id;closePick();openDetail(id)};
+pick.addEventListener("click",e=>{if(e.target===pick)closePick()});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&!pick.hidden)closePick();
+  if(e.key==="/"&&!/INPUT|TEXTAREA/.test(e.target.tagName)&&!e.target.isContentEditable&&!document.querySelector("dialog[open]")){e.preventDefault();const t=document.getElementById("p-cmp").hidden?"q":"q2";document.getElementById(t).focus()}
+});
 [dlg,document.getElementById("imgDlg")].forEach(d=>d.addEventListener("click",e=>{if(e.target===d)d.close()}));
 
 // ---- 共有リンク（GitHubのサイトで開くリンクを作る）----
@@ -732,11 +829,15 @@ renderSrc();renderSources();render();renderTable();
   const cv=document.getElementById("sky"),ctx=cv.getContext("2d");let W,H,stars=[],shoot=null,dpr=Math.min(2,devicePixelRatio||1);
   function size(){W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
     stars=Array.from({length:Math.round(W*H/5200)},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.2,p:Math.random()*6.28,s:.6+Math.random()*1.6,g:Math.random()<.18}));draw(0)}
+  let mx=0,my=0,tx=0,ty=0;
+  if(!REDUCED){addEventListener("pointermove",e=>{if(e.pointerType==="mouse"){tx=(e.clientX/W-.5);ty=(e.clientY/H-.5)}},{passive:true})}
   function draw(t){
     ctx.clearRect(0,0,W,H);
+    mx+=(tx-mx)*.06;my+=(ty-my)*.06;const sy=REDUCED?0:scrollY;
     for(const s of stars){const a=REDUCED?.6:.35+.65*(.5+.5*Math.sin(t/1000*s.s+s.p));
-      ctx.globalAlpha=a;ctx.fillStyle=s.g?"#f3dca0":"#dfe6ff";ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.283);ctx.fill();
-      if(s.r>1.2){ctx.globalAlpha=a*.25;ctx.beginPath();ctx.arc(s.x,s.y,s.r*3,0,6.283);ctx.fill()}}
+      const depth=s.r*.5,x=((s.x-mx*24*depth)%W+W)%W,y=((s.y-sy*.08*depth-my*24*depth)%H+H)%H;
+      ctx.globalAlpha=a;ctx.fillStyle=s.g?"#f3dca0":"#dfe6ff";ctx.beginPath();ctx.arc(x,y,s.r,0,6.283);ctx.fill();
+      if(s.r>1.2){ctx.globalAlpha=a*.25;ctx.beginPath();ctx.arc(x,y,s.r*3,0,6.283);ctx.fill()}}
     if(shoot){const k=(t-shoot.t0)/900;if(k>1)shoot=null;else{const x=shoot.x+shoot.dx*k,y=shoot.y+shoot.dy*k;
       const g=ctx.createLinearGradient(x,y,x-shoot.dx*.25,y-shoot.dy*.25);g.addColorStop(0,"rgba(255,240,200,"+(1-k)+")");g.addColorStop(1,"rgba(255,240,200,0)");
       ctx.globalAlpha=1;ctx.strokeStyle=g;ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-shoot.dx*.25,y-shoot.dy*.25);ctx.stroke()}}
